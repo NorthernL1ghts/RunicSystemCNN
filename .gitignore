@@ -1,0 +1,47 @@
+# Ignore build and output directories
+bin/
+bin-int/
+
+# Ignore IDE-specific settings
+.vs/
+.vscode/
+
+# Ignore user-specific files
+*.user
+*.suo
+*.cache
+*.log
+*.csproj.user
+
+# Ignore project files except solution
+*.csproj
+Properties/
+
+# Ignore compiled files
+obj/
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.lib
+*.ncb
+*.sdf
+*.sqlite
+*.sqlite3
+
+# Ignore temporary files
+*.tmp
+*.bak
+*.swp
+
+# Ignore package dependencies
+packages/
+.nuget/
+
+# Ignore generated files
+model.zip
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db

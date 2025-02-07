@@ -21,28 +21,28 @@ namespace RunicSystemCNN
 
     public class CNN
     {
-        private static readonly string ROOT_DIR = AppDomain.CurrentDomain.BaseDirectory;
-        private static readonly string OUTPUT_DIR = Path.Combine(ROOT_DIR, "output");
-        private static readonly string MODEL_PATH = Path.Combine(OUTPUT_DIR, "model.zip");
+        private static readonly string RootDir = AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string OutputDir = Path.Combine(RootDir, "output");
+        private static readonly string ModelPath = Path.Combine(OutputDir, "model.zip");
 
-        private readonly MLContext _mlContext;
-        private readonly ITransformer _model;
-        private readonly PredictionEngine<DummyData, DummyPrediction> _predictionEngine;
+        private readonly MLContext mlContext;
+        private readonly ITransformer model;
+        private readonly PredictionEngine<DummyData, DummyPrediction> predictionEngine;
 
         public CNN()
         {
-            _mlContext = new MLContext();
+            mlContext = new MLContext();
             CreateOutputFolder();
-            _model = TrainModel();
-            _predictionEngine = _mlContext.Model.CreatePredictionEngine<DummyData, DummyPrediction>(_model);
+            model = TrainModel();
+            predictionEngine = mlContext.Model.CreatePredictionEngine<DummyData, DummyPrediction>(model);
         }
 
         private void CreateOutputFolder()
         {
-            if (!Directory.Exists(OUTPUT_DIR))
+            if (!Directory.Exists(OutputDir))
             {
-                Directory.CreateDirectory(OUTPUT_DIR);
-                Console.WriteLine($"Created output directory: {OUTPUT_DIR}");
+                Directory.CreateDirectory(OutputDir);
+                Console.WriteLine($"Created output directory: {OutputDir}");
             }
         }
 
@@ -59,27 +59,40 @@ namespace RunicSystemCNN
             };
 
             Console.WriteLine("Loading dummy data...");
-            var dataView = _mlContext.Data.LoadFromEnumerable(dummyData);
+            var dataView = mlContext.Data.LoadFromEnumerable(dummyData);
 
             Console.WriteLine("Defining the pipeline...");
-            var pipeline = _mlContext.Transforms.Concatenate("Features", nameof(DummyData.Feature1), nameof(DummyData.Feature2))
-                .Append(_mlContext.Transforms.NormalizeMinMax("Features"))
-                .Append(_mlContext.Transforms.Conversion.MapValueToKey("Label"))
-                .Append(_mlContext.MulticlassClassification.Trainers.SdcaNonCalibrated("Label", "Features"))
-                .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+
+            // Step 1: Concatenate feature columns
+            var featureColumn = mlContext.Transforms.Concatenate("Features", nameof(DummyData.Feature1), nameof(DummyData.Feature2));
+
+            // Step 2: Map label to key
+            var labelColumn = mlContext.Transforms.Conversion.MapValueToKey("Label");
+
+            // Step 3: Apply the multiclass classification trainer
+            var trainer = mlContext.MulticlassClassification.Trainers.SdcaNonCalibrated("Label", "Features");
+
+            // Step 4: Convert predicted label from key back to value
+            var predictedLabelColumn = mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel");
+
+            // Combine all transformations and training into a pipeline
+            var pipeline = featureColumn.Append(labelColumn)
+                                       .Append(trainer)
+                                       .Append(predictedLabelColumn);
 
             Console.WriteLine("Training the model...");
-            var model = pipeline.Fit(dataView);
+            var trainedModel = pipeline.Fit(dataView);
 
             Console.WriteLine("Saving the model...");
-            _mlContext.Model.Save(model, dataView.Schema, MODEL_PATH);
+            mlContext.Model.Save(trainedModel, dataView.Schema, ModelPath);
 
-            return model;
+            return trainedModel;
         }
+
 
         public uint Predict(DummyData sampleData)
         {
-            return _predictionEngine.Predict(sampleData).PredictedLabel;
+            return predictionEngine.Predict(sampleData).PredictedLabel;
         }
     }
 }

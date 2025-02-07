@@ -23,7 +23,7 @@ namespace RunicSystemCNN
     {
         private static readonly string RootDir = AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string OutputDir = Path.Combine(RootDir, "output");
-        private static readonly string ModelPath = Path.Combine(OutputDir, "model.zip");
+        private static readonly string ModelPath = Path.Combine(OutputDir, "model.zip"); // NOTE (NL): We will not use zip later!
 
         private readonly MLContext mlContext;
         private readonly ITransformer model;
@@ -49,7 +49,6 @@ namespace RunicSystemCNN
                 Console.WriteLine($"Created output directory: {OutputDir}");
             }
         }
-
 
         private ITransformer TrainModel()
         {
@@ -93,7 +92,6 @@ namespace RunicSystemCNN
 
             return trainedModel;
         }
-
 
         public uint Predict(DummyData sampleData)
         {

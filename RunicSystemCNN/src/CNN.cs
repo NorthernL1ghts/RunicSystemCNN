@@ -39,12 +39,17 @@ namespace RunicSystemCNN
 
         private void CreateOutputFolder()
         {
-            if (!Directory.Exists(OutputDir))
+            if (Directory.Exists(OutputDir))
+            {
+                Console.WriteLine($"Output directory found at {OutputDir}, skipping creation.\n");
+            }
+            else
             {
                 Directory.CreateDirectory(OutputDir);
                 Console.WriteLine($"Created output directory: {OutputDir}");
             }
         }
+
 
         private ITransformer TrainModel()
         {

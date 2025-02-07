@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 
-namespace RunicSystemCNN.src
+namespace RunicSystemCNN
 {
     public class DummyData
     {
@@ -20,6 +21,10 @@ namespace RunicSystemCNN.src
 
     public class CNN
     {
+        private static readonly string ROOT_DIR = AppDomain.CurrentDomain.BaseDirectory;
+        private static readonly string OUTPUT_DIR = Path.Combine(ROOT_DIR, "output");
+        private static readonly string MODEL_PATH = Path.Combine(OUTPUT_DIR, "model.zip");
+
         private readonly MLContext _mlContext;
         private readonly ITransformer _model;
         private readonly PredictionEngine<DummyData, DummyPrediction> _predictionEngine;
@@ -27,8 +32,18 @@ namespace RunicSystemCNN.src
         public CNN()
         {
             _mlContext = new MLContext();
+            CreateOutputFolder();
             _model = TrainModel();
             _predictionEngine = _mlContext.Model.CreatePredictionEngine<DummyData, DummyPrediction>(_model);
+        }
+
+        private void CreateOutputFolder()
+        {
+            if (!Directory.Exists(OUTPUT_DIR))
+            {
+                Directory.CreateDirectory(OUTPUT_DIR);
+                Console.WriteLine($"Created output directory: {OUTPUT_DIR}");
+            }
         }
 
         private ITransformer TrainModel()
@@ -57,7 +72,7 @@ namespace RunicSystemCNN.src
             var model = pipeline.Fit(dataView);
 
             Console.WriteLine("Saving the model...");
-            _mlContext.Model.Save(model, dataView.Schema, "model.zip");
+            _mlContext.Model.Save(model, dataView.Schema, MODEL_PATH);
 
             return model;
         }
